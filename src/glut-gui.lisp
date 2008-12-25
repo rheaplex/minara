@@ -4,31 +4,35 @@
 
 ;; Events
 
-(defvar *quit-hook* nil
+(defun do-nothing (&rest dummy) 
+  (declare (ignore dummy))
+  nil)
+
+(defvar *quit-hook* #'do-nothing
   "The current quit event scheme hook")
 
-(defvar *resize-hook* nil
+(defvar *resize-hook* #'do-nothing
   "The current window resize event scheme hook")
 
-(defvar *draw-hook* nil
+(defvar *draw-hook* #'do-nothing
   "The current window expose event scheme hook")
 
-(defvar *mouse-button-down-hook* nil
+(defvar *mouse-button-down-hook* #'do-nothing
   "The current mouse button event scheme hook")
 
-(defvar *mouse-button-up-hook* nil
+(defvar *mouse-button-up-hook* #'do-nothing
   "The current mouse button release event scheme hook")
 
-(defvar *mouse-move-hook* nil
+(defvar *mouse-move-hook* #'do-nothing
   "The current mouse moved event scheme hook")
 
-(defvar *key-press-hook* nil
+(defvar *key-press-hook* #'do-nothing
   "The current key pressed event scheme hook")
 
-(defvar *key-release-hook* nil
+(defvar *key-release-hook* #'do-nothing
   "The current key releaseded event scheme hook")
 
-(defvar *menu-select-hook* nil
+(defvar *menu-select-hook* #'do-nothing
   "The current menu selected event scheme hook")
 
 
@@ -93,7 +97,7 @@
   (gl:matrix-mode :projection)
   (gl:load-identity)
   (glu:ortho-2d 0.0 width 0.0 height)
-  (gl:matrix-mode :model-view)
+  (gl:matrix-mode :modelview)
   (gl:load-identity)
   (funcall *resize-hook* w width height))
 
@@ -105,11 +109,11 @@
 
 (defmethod glut:keyboard ((w minara-glut-window) key x y)
   (let ((modifiers (glut:get-modifier-values)))
-    (funcall *key-press-hook* (coerce 'string key) modifiers)))
+    (funcall *key-press-hook* (string key) modifiers)))
 
 (defmethod glut:keyboard-up ((w minara-glut-window) key x y)
   (let ((modifiers (glut:get-modifier-values)))
-    (funcall *key-release-hook* (coerce 'string key) modifiers)))
+    (funcall *key-release-hook* (string key) modifiers)))
 
 (defmethod glut:mouse ((w minara-glut-window) button state x y)
   (funcall (if (eq state :up)
@@ -171,7 +175,12 @@
   (gl:flush)
   (glut:swap-buffers))
 
+(defgeneric display-window (glut:window))
+
+(defmethod display-window ((win glut:window))
+  (glut:display-window win))
 
 ;; Main program startup
 
-;;(glut:main-loop)
+(defun main-event-loop ()
+  (glut:main-loop))

@@ -22,10 +22,11 @@
 ;; This is a GLUT wart: if we started without a window open we'd quit
 
 (defun load-splash-screen ()
-  (make-window-from-file "../minara.minara"))
+  (display-window (make-window-from-file "../minara.minara")))
 	 
 
 ;; Main entry point / startup.
 
 (defun minara ()
- (load-splash-screen))
+ (load-splash-screen)
+ (main-event-loop))

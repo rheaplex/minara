@@ -83,7 +83,6 @@
   (buffer-range-to-string buffer (buffer-start buffer) (buffer-end buffer)))
 
 ;; Incredibly slow. Replace with a buffer-stream system.
-;; Evaluates in current package, make sure to set the package beforehand.
 
 (defun evaluate-buffer (buffer package-name)
   (let ((old-package *package*))
@@ -180,7 +179,7 @@
       (let ((c (buffer-cache cb)))
 	(minara-rendering:cache-record-begin c)
 	(with-buffer cb
-	  (evaluate-buffer cb))
+	  (evaluate-buffer cb "minara-rendering"))
 	(minara-rendering:cache-record-end c)
 	(clear-buffer-changed cb))))
 

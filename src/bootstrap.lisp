@@ -1,46 +1,39 @@
-(progn
-  (require 'asdf)
-  
-  (setf asdf:*central-registry*
-	'(*default-pathname-defaults*
-	  #p"/home/robmyers/Documents/hacking/cl-minara/"))
-  
-  (asdf:operate 'asdf:load-op 'flexichain)
-  
-  (asdf:operate 'asdf:load-op 'cffi)
-  
-  (asdf:operate 'asdf:load-op 'cl-opengl)
-  (asdf:operate 'asdf:load-op 'cl-glu)
-  (asdf:operate 'asdf:load-op 'cl-glut)
-  
-  ;;(asdf:operate 'asdf:load-op 'minara)
+(require 'asdf)
 
-  (load "packages.lisp")
-  
-  (load "test.lisp")
-  (load "glut-gui.lisp")
-  (load "transformations.lisp")
-  (load "glut-rendering.lisp")
-  (load "events.lisp")
-  (load "keymap.lisp")
-  (load "buffer.lisp")
-  (load "evaluation.lisp")
-  (load "window.lisp")
-  (load "minibuffer.lisp")
-  (load "undo.lisp")
-  (load "command-line.lisp")
-  (load "menu.lisp")
-  (load "geometry.lisp")
-  ;;  (load "picking.lisp") ;;-
-  (load "tool.lisp")
-  (load "minara.lisp"))
+;; This will need modifying if launched from a script in the parent directory
+;; It should handle both eventualities, checking for last part of truename . .
+(mapc #'(lambda (asd)
+	  (pushnew (make-pathname :directory 
+				  (pathname-directory asd))
+		   asdf:*central-registry*
+		   :test #'equal))
+      (directory (merge-pathnames #p"*/*.asd" (truename "../lib/"))))
+
+(asdf:operate 'asdf:load-op 'flexichain)
+
+;;(asdf:operate 'asdf:load-op 'cffi)
+
+(asdf:operate 'asdf:load-op 'cl-opengl)
+(asdf:operate 'asdf:load-op 'cl-glu)
+(asdf:operate 'asdf:load-op 'cl-glut)
+
+;; check for libcairo.so, warn user to install cairo-dev if missing
+(asdf:operate 'asdf:load-op 'cl-cairo2)
+
+(asdf:operate 'asdf:load-op 'minara)
+
+(minara::minara)
 
 
+;; Make sure you have a Lisp installed
+;; sudo apt-get install sbcl
 
-;;(load "view-tools.lisp")
-;;; (load "colour-tools.lisp")
+;; To install cl-cairo
+;; sudo apt-get install libcairo2-dev
+;; (asdf-install::install 'cl-utilities)
+;; (asdf-install::install 'cl-colors)
+;; (asdf-install::install 'cl-cairo2)
 
-;;-
-;;; (load "pen-tools.lisp")
-;;;(load "shape-tools.lisp")
-
+;; Most of the libraries Minara uses are included,
+;; This will change as they become asdf-installable
+;; (or cl-cairo will be included if neccessary).
