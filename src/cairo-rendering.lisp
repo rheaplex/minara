@@ -17,7 +17,6 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Minara.  If not, see <http://www.gnu.org/licenses/>.
 
-
 (in-package minara-rendering)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -87,6 +86,7 @@
 (defun cache-dispose (cache)
   (cairo:destroy (cache-cairo-context cache)) ;; Also disposes of the surface
   ;; dispose of the gl texture
+  (format t "cache-dispose needs to dispose of gl texture~%")
   )
 
 (defun cache-resize (cache width height)
@@ -101,6 +101,7 @@
   (blit-texture (cache-opengl-texture-id cache)))
 
 (defun cache-record-begin (cache)
+  (format t "cache-record-begin~%")
   (setf cairo:*context* (cache-cairo-context cache)))
 
 (defun cache-record-end (cache)
@@ -109,8 +110,15 @@
   (gl:tex-image-2d :texture-2d 0
 		   :rgba (cache-width cache) (cache-height cache) 
 		   0 :bgra :unsigned-byte 
-		   (cairo:image-surface-get-data cache 4)))
+		   (cairo:image-surface-get-data (cache-cairo-texture cache)
+						 :pointer-only t)))
 
+(defmethod glut:reshape :after ((w minara::window) width height)
+  (dolist (buf-cons (minara::window-buffers w))
+    (when (minara::buffer-cache (cdr buf-cons))
+      (cache-dispose (minara::buffer-cache (cdr buf-cons))))
+    (setf (minara::buffer-cache (cdr buf-cons))
+	  (make-cache width height))))
 
 ;; Rendering
 #|
@@ -206,3 +214,11 @@
 
 (defun scale (sx sy)
   (cairo:scale sx sy))
+
+(defun rendering-begin ()
+  (setf *matrix-stack* '())
+   (push (cairo:make-trans-matrix)
+	 *matrix-stack*))
+
+(defun rendering-end ()
+ (setf *matrix-stack* '()))

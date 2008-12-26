@@ -76,7 +76,8 @@
 	(:export :set-colour :path-begin :path-end :move-to :line-to :curve-to 
 		 :push-matrix :pop-matrix :concatenate-matrix :set-matrix 
 		 :identity-matrix :translate :rotate :scale
-		 :cache-draw :cache-record-begin :cache-record-end)))
+		 :cache-draw :cache-record-begin :cache-record-end
+		 :rendering-begin :rendering-end)))
 
 (eval-when (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE)
   (defpackage minara-picking

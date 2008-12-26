@@ -1,47 +1,12 @@
 
 (in-package minara)
 
-
-;; Events
-
-(defun do-nothing (&rest dummy) 
-  (declare (ignore dummy))
-  nil)
-
-(defvar *quit-hook* #'do-nothing
-  "The current quit event scheme hook")
-
-(defvar *resize-hook* #'do-nothing
-  "The current window resize event scheme hook")
-
-(defvar *draw-hook* #'do-nothing
-  "The current window expose event scheme hook")
-
-(defvar *mouse-button-down-hook* #'do-nothing
-  "The current mouse button event scheme hook")
-
-(defvar *mouse-button-up-hook* #'do-nothing
-  "The current mouse button release event scheme hook")
-
-(defvar *mouse-move-hook* #'do-nothing
-  "The current mouse moved event scheme hook")
-
-(defvar *key-press-hook* #'do-nothing
-  "The current key pressed event scheme hook")
-
-(defvar *key-release-hook* #'do-nothing
-  "The current key releaseded event scheme hook")
-
-(defvar *menu-select-hook* #'do-nothing
-  "The current menu selected event scheme hook")
-
-
 ;; Menus
 
 (defvar *main-menu* (glut:create-menu (cffi:null-pointer)))
 
 (cffi:defcallback minara-menu-select-callback :void ((value :int))
-  (funcall *menu-select-hook* value))
+  (menu-select-hook value))
 
 (defun minara-menu-make ()
   (let ((id (glut:create-menu (cffi:callback minara-menu-select-callback))))
@@ -63,11 +28,11 @@
 
 ;; Windows
 
-(defun window-for-id (id)
-  (aref id cl-glut::*id->window*))
+;(defun window-for-id (id)
+; (aref cl-glut::*id->window* id))
 
 (defun window-current ()
-  (window-for-id (glut:get-window)))
+  (glut:get-window))
 
 (defun glut-window-set (win)
   (when (\= win 0)
@@ -79,88 +44,74 @@
 (defun window-width (win)
  (glut:width win))
 
-(defclass minara-glut-window (glut:window)
-  ()
-  (:default-initargs :width 500 :height 500 :pos-x 100 :pos-y 100
-                     :mode '(:single :rgb) :title "minara"))
-
-(defmethod initialize-instance :after ((w minara-glut-window) &key)
-  w)
-
 ;;(defun minara-window-make (width height))
 
-(defmethod glut:display ((w minara-glut-window))
-  (funcall *draw-hook* w))
+(defmethod glut:display ((w window))
+  (draw-hook w))
 
-(defmethod glut:reshape ((w minara-glut-window) width height)
+(defmethod glut:reshape ((w window) width height)
   (gl:viewport 0 0 width height)
   (gl:matrix-mode :projection)
   (gl:load-identity)
   (glu:ortho-2d 0.0 width 0.0 height)
   (gl:matrix-mode :modelview)
   (gl:load-identity)
-  (funcall *resize-hook* w width height))
+  (resize-hook w width height))
 
-(defmethod glut:passive-motion ((w minara-glut-window) x y)
-  (funcall *mouse-move-hook* w x y))
+(defmethod glut:passive-motion ((w window) x y)
+  (mouse-move-hook w x y))
 
-(defmethod glut:motion ((w minara-glut-window) x y)
-  (funcall *mouse-move-hook* w x y))
+(defmethod glut:motion ((w window) x y)
+  (mouse-move-hook w x y))
 
-(defmethod glut:keyboard ((w minara-glut-window) key x y)
+(defmethod glut:keyboard ((w window) key x y)
   (let ((modifiers (glut:get-modifier-values)))
-    (funcall *key-press-hook* (string key) modifiers)))
+    (key-press-hook (string key) modifiers)))
 
-(defmethod glut:keyboard-up ((w minara-glut-window) key x y)
+(defmethod glut:keyboard-up ((w window) key x y)
   (let ((modifiers (glut:get-modifier-values)))
-    (funcall *key-release-hook* (string key) modifiers)))
+    (key-release-hook w (string key) modifiers)))
 
-(defmethod glut:mouse ((w minara-glut-window) button state x y)
-  (funcall (if (eq state :up)
-               *mouse-button-up-hook*
-               *mouse-button-down-hook*)
-           w
-           (case button
-             (:left-button 1)
-             (:middle-button 2)
-             (otherwise 3)) ;; GLUT_RIGHT_BUTTON
-           x
-           y))
+(defmethod glut:mouse ((w window) button state x y)
+  (if (eq state :up)
+      (mouse-up-hook w
+		     (case button
+		       (:left-button 1)
+		       (:middle-button 2)
+		       (otherwise 3)) ;; GLUT_RIGHT_BUTTON
+		     x
+		     y)
+      (mouse-down-hook w
+		       (case button
+			 (:left-button 1)
+			 (:middle-button 2)
+			 (otherwise 3)) ;; GLUT_RIGHT_BUTTON
+		       x
+		       y)))
 
-(defmethod glut:menu-state ((w minara-glut-window) id)
-  (funcall *menu-select-hook* w id))
-
-(defun minara-window-current ()
-  (glut:get-window))
-
-(defun minara-window-set (win)
-  (glut:set-window win))
+(defmethod glut:menu-state ((w window) id)
+  (menu-select-hook w id))
 
 (defun minara-window-invalidate (win)
   (glut:post-window-redisplay win))
 
 (defun minara-window-set-title (win title)
-  (let ((old-win (minara-window-current)))
-    (glut:set-window win)
-    (glut:set-window-title title)
-    (glut:set-window old-win)))
+  (setf (glut:title win)
+	title))
 
-(defun minara-window-draw-status (win text)
-  (let ((old-win (minara-window-current)))
-    (glut:set-window win)
-    (gl:push-matrix)
-    ;; De-hardcode all this!
-    (gl:color 0.9 0.8 0.8)
-    (gl:raster-pos 5.2 4.8)
-    (loop for c across text
-       do (glut:bitmap-character :+bitmap-helvetica-12+ c))
-    (gl:color 0.1 0.1 0.25)
-    (gl:raster-pos 5.0 5.0)
-    (loop for c across text
-       do (glut:bitmap-character :+bitmap-helvetica-12+ c))
-    ;; End de-hardcode
-    (gl:pop-matrix)
-    (glut:set-window old-win)))
+(defun minara-window-draw-status (text)
+  (gl:push-matrix)
+  ;; De-hardcode all this!
+  (gl:color 0.9 0.8 0.8)
+  (gl:raster-pos 5.2 4.8)
+  (loop for c across text
+     do (glut:bitmap-character glut:+bitmap-helvetica-12+ (char-int c)))
+  (gl:color 0.1 0.1 0.25)
+  (gl:raster-pos 5.0 5.0)
+  (loop for c across text
+     do (glut:bitmap-character glut:+bitmap-helvetica-12+ (char-int c)))
+  ;; End de-hardcode
+  (gl:pop-matrix))
 
 (defun minara-window-draw-begin (win)
   (declare (ignore win))
@@ -177,10 +128,5 @@
 
 (defgeneric display-window (glut:window))
 
-(defmethod display-window ((win glut:window))
+(defmethod display-window ((win window))
   (glut:display-window win))
-
-;; Main program startup
-
-(defun main-event-loop ()
-  (glut:main-loop))

@@ -127,7 +127,7 @@
 	(funcall handler window-id))))
   
 (defun install-default-menu-handler ()
-  (setf *menu-select-hook* #'default-menu-handler))
+  (add-menu-select-hook #'default-menu-handler))
 
 ;; Just install the default menu handler to start with
 (install-default-menu-handler)

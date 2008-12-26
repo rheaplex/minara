@@ -85,6 +85,7 @@
 ;; Incredibly slow. Replace with a buffer-stream system.
 
 (defun evaluate-buffer (buffer package-name)
+  (format t "evaluating buffer")
   (let ((old-package *package*))
     (setf *package* (find-package package-name))
     (with-input-from-string 
@@ -177,6 +178,7 @@
       (minara-rendering:cache-draw (buffer-cache cb))
       ;; Otherwise, generate the cache and update the cache timestamp
       (let ((c (buffer-cache cb)))
+	(format t "draw-buffer~%")
 	(minara-rendering:cache-record-begin c)
 	(with-buffer cb
 	  (evaluate-buffer cb "minara-rendering"))

@@ -34,27 +34,6 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Calling event handlers with good error recovery and diagnostics
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defvar *event-stack* '())
-			  
-#|(defun call-with-backtrace (call-me)
-  (funcall call-me))
-;;  (setf event-stack (make-stack t))
-;;  (catch t
-;;    call-me
-;;    event-error-handler))
-
-(defun event-error-handler (&rest args)
-  (if (= (length args) 5)
-      (progn
-	(error (cdr args))
-	(display-backtrace event-stack
-			   (current-error-port)))))
-|#
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Quitting
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -114,7 +93,7 @@
 (add-resize-hook #'update-window-dimensions)|#
 
 (defun swizzle-y (win y)
-  (- (cl-glut:height (window-for-id win))
+  (- (cl-glut:height win)
      y))
 
 

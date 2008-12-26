@@ -28,5 +28,4 @@
 ;; Main entry point / startup.
 
 (defun minara ()
- (load-splash-screen)
- (main-event-loop))
+ (load-splash-screen))

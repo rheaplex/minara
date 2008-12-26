@@ -54,7 +54,8 @@
             :accessor window-buffers
 	    :initform '())
    (status :initarg :status
-           :accessor window-status)
+           :accessor window-status
+	   :initform "")
    (undo-stack :initarg :undo-stack
                :accessor window-undo-stack
 	       :initform '()))
@@ -82,7 +83,7 @@
     (hash-create-handle! *windows* (window-id window) window)
     ;; Redraw timestamp
     (initialise-timestamp! window)
-
+c
     ;; Buffers *under* the main buffer, created bottom to top
     ;; Ask before adding anything here
     (window-view-buffer-make window)
@@ -176,12 +177,16 @@
   ;; Check timestamps, short circuiting on the first earlier than the window
   ;; If the window cache is more recent than the buffer timestamps
   ;;  (install-window-rendering-protocol)
-  (minara-rendering:push-matrix)
+  ;;  (minara-rendering:push-matrix)
+  (minara-rendering:rendering-begin)
   (dolist (buf-cons (window-buffers cb))
     (let ((buf (cdr buf-cons)))
+      (format t "caching ~a~%" (buffer-cache buf))
+      (minara-rendering:cache-record-begin (buffer-cache buf))
       (evaluate-buffer buf "MINARA-RENDERING")
+      (minara-rendering:cache-record-end (buffer-cache buf))
       (clear-buffer-changed buf)))
-  (minara-rendering:pop-matrix))
+  (minara-rendering:rendering-end))
 
 ;; Draw or redraw a window's buffers/caches
 
@@ -191,8 +196,7 @@
   (minara-window-draw-begin window)
   (window-draw window)
   ;; Should be set status, like set title. But needs faking in GLUT...
-  (minara-window-draw-status window
-			     (concatenate 'string 
+  (minara-window-draw-status (concatenate 'string
 					  prefix
 					  (window-status window)))
   (minara-window-draw-end window))

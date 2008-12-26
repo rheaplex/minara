@@ -24,7 +24,6 @@
 
 (minara::minara)
 
-
 ;; Make sure you have a Lisp installed
 ;; sudo apt-get install sbcl
 
