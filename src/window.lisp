@@ -181,11 +181,7 @@ c
   (minara-rendering:rendering-begin)
   (dolist (buf-cons (window-buffers cb))
     (let ((buf (cdr buf-cons)))
-      (format t "caching ~a~%" (buffer-cache buf))
-      (minara-rendering:cache-record-begin (buffer-cache buf))
-      (evaluate-buffer buf "MINARA-RENDERING")
-      (minara-rendering:cache-record-end (buffer-cache buf))
-      (clear-buffer-changed buf)))
+      (draw-buffer buf)))
   (minara-rendering:rendering-end))
 
 ;; Draw or redraw a window's buffers/caches

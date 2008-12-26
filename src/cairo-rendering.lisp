@@ -20,40 +20,6 @@
 (in-package minara-rendering)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; OpenGL utilities
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun setup-gl-for-rendering ()
-  (gl:blend-func :src-alpha :one))
-
-(defparameter *texture-rectangle* nil)
-
-(defun make-texture-rectangle ()
-  (setf *texture-rectangle* (gl:gen-lists 1))
-  (gl:with-new-list (*texture-rectangle* :compile-and-execute)
-    (gl:with-primitives :quads 
-      (gl:tex-coord 0  0)
-      (gl:Vertex -0.5 0.5 0)
-    
-      (gl:tex-coord 1  0)
-      (gl:Vertex 0.5 0.5 0)
-      
-      (gl:tex-coord 1  1)
-      (gl:Vertex 0.5 -0.5 0)
-      
-      (gl:tex-coord 0  1)
-      (gl:Vertex -0.5 -0.5 0))))
-
-(make-texture-rectangle)
-
-(defun blit-texture (texture)
-  (gl:active-texture 0)
-  (gl:bind-texture :texture-2d texture)
-;;  (declare (optimize (speed 3) (safety 0) (space 0) (debug 0)))
-  (gl:call-list *texture-rectangle*))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The Rendering Protocol
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -98,10 +64,20 @@
       (make-cache width height))))
 
 (defun cache-draw (cache)
-  (blit-texture (cache-opengl-texture-id cache)))
+; (gl:active-texture 0)
+  (gl:bind-texture :texture-2d (cache-opengl-texture-id cache))
+; (gl:color 0 1 1)
+  (gl:with-primitives :quads
+    (gl:tex-coord 0 1)
+    (gl:vertex 0 0)
+    (gl:tex-coord 1 1)
+    (gl:vertex 0 400)
+    (gl:tex-coord 1 0)
+    (gl:vertex 600 400)
+    (gl:tex-coord 0 0)
+    (gl:vertex 600 0)))
 
 (defun cache-record-begin (cache)
-  (format t "cache-record-begin~%")
   (setf cairo:*context* (cache-cairo-context cache)))
 
 (defun cache-record-end (cache)
@@ -216,6 +192,7 @@
   (cairo:scale sx sy))
 
 (defun rendering-begin ()
+  (gl:blend-func :src-alpha :one)
   (setf *matrix-stack* '())
    (push (cairo:make-trans-matrix)
 	 *matrix-stack*))

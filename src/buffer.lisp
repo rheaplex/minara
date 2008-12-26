@@ -173,17 +173,16 @@
 ;; Redraw the buffer (just run the cache if no timestamp variation)
 
 (defun draw-buffer (cb)
-  (if (buffer-changed-p cb)
-      ;; Just redraw the cache, the text hasn't changed
-      (minara-rendering:cache-draw (buffer-cache cb))
-      ;; Otherwise, generate the cache and update the cache timestamp
-      (let ((c (buffer-cache cb)))
-	(format t "draw-buffer~%")
-	(minara-rendering:cache-record-begin c)
-	(with-buffer cb
-	  (evaluate-buffer cb "minara-rendering"))
-	(minara-rendering:cache-record-end c)
-	(clear-buffer-changed cb))))
+  (when (buffer-changed-p cb)
+    ;; Otherwise, generate the cache and update the cache timestamp
+    (let ((c (buffer-cache cb)))
+      (format t "draw-buffer~%")
+      (minara-rendering:cache-record-begin c)
+      (with-buffer cb
+	(evaluate-buffer cb "minara-rendering"))
+      (minara-rendering:cache-record-end c)
+      (clear-buffer-changed cb)))
+  (minara-rendering:cache-draw (buffer-cache cb)))
 
 ;; Flag the buffer to be drawn when the window next redraws
 
